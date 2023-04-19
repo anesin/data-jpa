@@ -4,11 +4,11 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
 import javax.transaction.Transactional;
-
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -138,6 +138,49 @@ class MemberRepositoryTest {
 
     memberRepository.findByNames(List.of("AAA", "BBB"))
                     .forEach(m -> System.out.println("Member = " + m));
+  }
+
+
+  @Test
+  void returnType() {
+    Member member1 = new Member("AAA", 10);
+    Member member2 = new Member("BBB", 20);
+    Member member3 = new Member("AAA", 30);
+    memberRepository.save(member1);
+    memberRepository.save(member2);
+    memberRepository.save(member3);
+
+    System.out.println("======= return type list =======");
+    memberRepository.findMembersByUsername("AAA")
+                    .forEach(m -> System.out.println("List Member = " + m));
+    memberRepository.findMembersByUsername("ABC")
+                    .forEach(m -> System.out.println("List Member = " + m));
+
+    System.out.println("======= return type one member =======");
+    Member findMember1 = memberRepository.findMemberByUsername("BBB");
+    System.out.println("findMember1 = " + findMember1);
+    Member findMember2 = memberRepository.findMemberByUsername("ABC");
+    System.out.println("findMember2 = " + findMember2);
+    try {
+      Member findMember3 = memberRepository.findMemberByUsername("AAA");
+      System.out.println("findMember3 = " + findMember3);
+    }
+    catch (IncorrectResultSizeDataAccessException e) {  // NonUniqueResultException
+      e.printStackTrace();
+    }
+
+    System.out.println("======= return type optional member =======");
+    memberRepository.findOptionalMemberByUsername("BBB")
+                    .ifPresent(m -> System.out.println("OptionalMember = " + m));
+    memberRepository.findOptionalMemberByUsername("ABC")
+                    .ifPresent(m -> System.out.println("OptionalMember = " + m));
+    try {
+      memberRepository.findOptionalMemberByUsername("AAA")
+                      .ifPresent(m -> System.out.println("OptionalMember = " + m));
+    }
+    catch (IncorrectResultSizeDataAccessException e) {  // NonUniqueResultException
+      e.printStackTrace();
+    }
   }
 
 }
