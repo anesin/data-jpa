@@ -64,4 +64,22 @@ public class MemberJpaRepository {
              .getResultList();
   }
 
+
+  public List<Member> findByPage(int age, int offset, int limit) {
+    String jpql = "select m from Member m where m.age = :age order by m.username desc";
+    return em.createQuery(jpql, Member.class)
+             .setParameter("age", age)
+             .setFirstResult(offset)
+             .setMaxResults(limit)
+             .getResultList();
+  }
+
+
+  public long totalCount(int age) {
+    String jpql = "select count(m) from Member m where m.age = :age";
+    return em.createQuery(jpql, Long.class)
+             .setParameter("age", age)
+             .getSingleResult();
+  }
+
 }
