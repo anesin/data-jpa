@@ -5,6 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
@@ -181,6 +186,73 @@ class MemberRepositoryTest {
     catch (IncorrectResultSizeDataAccessException e) {  // NonUniqueResultException
       e.printStackTrace();
     }
+  }
+
+
+  @Test
+  void paging() {
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 10));
+    memberRepository.save(new Member("member3", 10));
+    memberRepository.save(new Member("member4", 10));
+    memberRepository.save(new Member("member5", 10));
+
+    int age = 10;
+    int limit = 3;
+
+    Sort sort = Sort.by(Sort.Direction.DESC, "username");
+    PageRequest pageRequest = PageRequest.of(0, limit, sort);
+    Page<Member> page = memberRepository.findByAge(age, pageRequest);
+    assertThat(page.getContent().size()).isEqualTo(limit);
+    assertThat(page.getContent().get(0).getUsername()).isEqualTo("member5");
+    assertThat(page.getTotalElements()).isEqualTo(5);
+    assertThat(page.getTotalPages()).isEqualTo(2);
+    assertThat(page.getNumber()).isEqualTo(0);
+    assertThat(page.isFirst()).isTrue();
+    assertThat(page.hasNext()).isTrue();
+
+    Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+  }
+
+
+  @Test
+  void slicing() {
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 10));
+    memberRepository.save(new Member("member3", 10));
+    memberRepository.save(new Member("member4", 10));
+    memberRepository.save(new Member("member5", 10));
+
+    int age = 10;
+    int limit = 3;
+
+    Sort sort = Sort.by(Sort.Direction.DESC, "username");
+    PageRequest pageRequest = PageRequest.of(0, limit, sort);
+    Slice<Member> slice = memberRepository.findSliceByAge(age, pageRequest);
+    assertThat(slice.getContent().size()).isEqualTo(limit);
+    assertThat(slice.getContent().get(0).getUsername()).isEqualTo("member5");
+    assertThat(slice.getNumber()).isEqualTo(0);
+    assertThat(slice.isFirst()).isTrue();
+    assertThat(slice.hasNext()).isTrue();
+  }
+
+
+  @Test
+  void listing() {
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 10));
+    memberRepository.save(new Member("member3", 10));
+    memberRepository.save(new Member("member4", 10));
+    memberRepository.save(new Member("member5", 10));
+
+    int age = 10;
+    int limit = 3;
+
+    Sort sort = Sort.by(Sort.Direction.DESC, "username");
+    PageRequest pageRequest = PageRequest.of(0, limit, sort);
+    List<Member> list = memberRepository.findListByAge(age, pageRequest);
+    assertThat(list.size()).isEqualTo(limit);
+    assertThat(list.get(0).getUsername()).isEqualTo("member5");
   }
 
 }
