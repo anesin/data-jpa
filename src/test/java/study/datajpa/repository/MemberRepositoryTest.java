@@ -255,4 +255,20 @@ class MemberRepositoryTest {
     assertThat(list.get(0).getUsername()).isEqualTo("member5");
   }
 
+
+  @Test
+  void bulkUpdate() {
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 15));
+    memberRepository.save(new Member("member3", 20));
+    memberRepository.save(new Member("member4", 21));
+    memberRepository.save(new Member("member5", 40));
+
+    int resultCount = memberRepository.bulkAgePlus(20);
+    Assertions.assertThat(resultCount).isEqualTo(3);
+
+    List<Member> members = memberRepository.findByUsername("member3");
+    Assertions.assertThat(members.get(0).getAge()).isEqualTo(21);
+  }
+
 }
