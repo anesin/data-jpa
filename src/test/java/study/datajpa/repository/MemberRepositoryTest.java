@@ -322,4 +322,10 @@ class MemberRepositoryTest {
     em.flush();
   }
 
+
+  @Test
+  void customQuery() {
+    memberRepository.findMemberCustom();
+  }
+
 }
