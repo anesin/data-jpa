@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
@@ -326,6 +327,26 @@ class MemberRepositoryTest {
   @Test
   void customQuery() {
     memberRepository.findMemberCustom();
+  }
+
+
+  @Test
+  public void specBasic() {
+    Team teamA = new Team("teamA");
+    em.persist(teamA);
+
+    Member m1 = new Member("m1", 0, teamA);
+    Member m2 = new Member("m2", 0, teamA);
+    em.persist(m1);
+    em.persist(m2);
+
+    em.flush();
+    em.clear();
+
+    Specification<Member> spec = MemberSpec.username("m1").and(MemberSpec.teamName("teamA"));
+    List<Member> result = memberRepository.findAll(spec);
+
+    assertThat(result.size()).isEqualTo(1);
   }
 
 }
