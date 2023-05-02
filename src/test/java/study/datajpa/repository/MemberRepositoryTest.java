@@ -5,10 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
@@ -347,6 +344,41 @@ class MemberRepositoryTest {
     List<Member> result = memberRepository.findAll(spec);
 
     assertThat(result.size()).isEqualTo(1);
+  }
+
+
+  @Test
+  public void queryByExample() {
+    String teamName = "teamA";
+    Team teamA = new Team(teamName);
+    Team teamB = new Team("teamB");
+    em.persist(teamA);
+    em.persist(teamB);
+
+    Member m1 = new Member("m1", 0, teamA);
+    Member m2 = new Member("m1", 10, teamB);
+    Member m3 = new Member("m2", 20, teamA);
+    em.persist(m1);
+    em.persist(m2);
+    em.persist(m3);
+
+    em.flush();
+    em.clear();
+
+    String name = "m1";
+    Member member = new Member(name);
+    var result1 = memberRepository.findAll(Example.of(member));
+    assertThat(result1.size()).isEqualTo(1);
+    assertThat(result1.get(0).getUsername()).isEqualTo(name);
+
+    ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("age");
+    var result2 = memberRepository.findAll(Example.of(member, matcher));
+    assertThat(result2.size()).isEqualTo(2);
+
+    Team team = new Team(teamName);
+    member.setTeam(team);
+    var result3 = memberRepository.findAll(Example.of(member, matcher));
+    assertThat(result3.size()).isEqualTo(1);
   }
 
 }
