@@ -349,8 +349,27 @@ class MemberRepositoryTest {
 
   @Test
   public void queryByExample() {
-    String teamName = "teamA";
-    Team teamA = new Team(teamName);
+    given();
+
+    String name = "m1";
+    Member member = new Member(name);
+    var result1 = memberRepository.findAll(Example.of(member));
+    assertThat(result1.size()).isEqualTo(1);
+    assertThat(result1.get(0).getUsername()).isEqualTo(name);
+
+    ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("age");
+    var result2 = memberRepository.findAll(Example.of(member, matcher));
+    assertThat(result2.size()).isEqualTo(2);
+
+    Team team = new Team("teamA");
+    member.setTeam(team);
+    var result3 = memberRepository.findAll(Example.of(member, matcher));
+    assertThat(result3.size()).isEqualTo(1);
+  }
+
+
+  private void given() {
+    Team teamA = new Team("teamA");
     Team teamB = new Team("teamB");
     em.persist(teamA);
     em.persist(teamB);
@@ -364,21 +383,52 @@ class MemberRepositoryTest {
 
     em.flush();
     em.clear();
+  }
+
+
+  @Test
+  public void projections() {
+    given();
 
     String name = "m1";
-    Member member = new Member(name);
-    var result1 = memberRepository.findAll(Example.of(member));
-    assertThat(result1.size()).isEqualTo(1);
-    assertThat(result1.get(0).getUsername()).isEqualTo(name);
+//    var result = memberRepository.findProjectionsByUsername(name);
+    var result = memberRepository.findProjectionsByUsername(name, UsernameOnly.class);
+    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.get(0).getUsername()).isEqualTo(name);
+  }
 
-    ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("age");
-    var result2 = memberRepository.findAll(Example.of(member, matcher));
-    assertThat(result2.size()).isEqualTo(2);
 
-    Team team = new Team(teamName);
-    member.setTeam(team);
-    var result3 = memberRepository.findAll(Example.of(member, matcher));
-    assertThat(result3.size()).isEqualTo(1);
+  @Test
+  public void OpenProjections() {
+    given();
+
+    String name = "m1";
+//    var result = memberRepository.findOpenProjectionsByUsername(name);
+    var result = memberRepository.findProjectionsByUsername(name, UsernameOnlyOpen.class);
+    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.get(0).getUsername()).isEqualTo(name + " 0 teamA");
+  }
+
+
+  @Test
+  public void ClassProjections() {
+    given();
+
+    String name = "m1";
+    var result = memberRepository.findProjectionsByUsername(name, UsernameOnlyDto.class);
+    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.get(0).getUsername()).isEqualTo(name);
+  }
+
+
+  @Test
+  public void nestedProjections() {
+    given();
+
+    String name = "m1";
+    var result = memberRepository.findProjectionsByUsername(name, NestedClosedProjection.class);
+    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.get(0).getUsername()).isEqualTo(name);
   }
 
 }
